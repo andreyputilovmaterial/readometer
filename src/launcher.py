@@ -2,7 +2,9 @@
 import argparse
 # from pathlib import Path
 import traceback, sys
-
+from datetime import datetime, timezone
+# import re, json
+from pathlib import Path
 
 
 
@@ -11,16 +13,19 @@ import traceback, sys
 
 if __name__ == '__main__':
     # run as a program
-    # from lib.mdmreadpy import read_mdd
-    pass
+    from reader_mdd import ReaderMDD
+    from reader_spss import ReaderSPSS
+    from reader_csv import ReaderCSV
 elif '.' in __name__:
     # package
-    # from .lib.mdmreadpy import read_mdd
-    pass
+    from .reader_mdd import ReaderMDD
+    from .reader_spss import ReaderSPSS
+    from .reader_csv import ReaderCSV
 else:
     # included with no parent package
-    # from lib.mdmreadpy import read_mdd
-    pass
+    from reader_mdd import ReaderMDD
+    from reader_spss import ReaderSPSS
+    from reader_csv import ReaderCSV
 
 
 
@@ -29,8 +34,83 @@ else:
 
 
 def call_read_records_count_program():
-    # return diff.entry_point({'arglist_strict':False})
-    raise NotImplementedError('Not implemented')
+    time_start = datetime.now()
+    parser = argparse.ArgumentParser(
+        description="Readometer",
+        prog='mdmtoolsap readometer'
+    )
+    parser.add_argument(
+        '-1',
+        '--inpfile',
+        help='Data file to read',
+        type=str,
+        required=True
+    )
+    parser.add_argument(
+        '--format',
+        default='autodetect',
+        help='Data file type, or "autodetect"',
+        choices=['autodetect','mdd','spss','csv'],
+        type=str,
+        required=False
+    )
+    args = None
+    args_rest = None
+    if True:
+        args, args_rest = parser.parse_known_args()
+    # else:
+    #     args = parser.parse_args() # strict - it's not strict
+    inp_file = None
+    if args.inpfile:
+        inp_file = Path(args.inpfile)
+        inp_file = '{inp_file}'.format(inp_file=inp_file.resolve())
+    else:
+        raise FileNotFoundError('Data file: file not provided; please use --inpfile')
+
+    if not(Path(inp_file).is_file()):
+        raise FileNotFoundError('file not found: {fname}'.format(fname=inp_file))
+
+    config = {
+    }
+
+    # print('MDM read script: script started at {dt}'.format(dt=time_start))
+
+    format = None
+    if args.format and args.format=='mdd':
+        format = 'mdd'
+    elif args.format and args.format=='spss':
+        format = 'spss'
+    elif args.format and args.format=='csv':
+        format = 'csv'
+    elif args.format and args.format=='autodetect':
+        if Path(inp_file).suffix.strip().lower() in ['.sav']:
+            format = 'spss'
+        elif Path(inp_file).suffix.strip().lower() in ['.mdd','.ddf']:
+            format = 'spss'
+        elif Path(inp_file).suffix.strip().lower() in ['.csv','.tsv']:
+            format = 'csv'
+        else:
+            raise Exception('auto-detect failed: input file format not recognized, or can\'t be handled yet: {fname}'.format(fname=Path(inp_file).name))
+
+    Reader = None
+    if format=='spss':
+        Reader = ReaderSPSS
+    elif format=='mdd':
+        Reader = ReaderMDD
+    elif format=='csv':
+        Reader = ReaderCSV
+    else:
+        raise Exception('format not supported: {fmt}'.format(fmt=format))
+
+
+    with Reader(inp_file) as doc:
+
+        result = doc.count_records()
+
+        print(result)
+
+    time_finish = datetime.now()
+    # print('MDM read script: finished at {dt} (elapsed {duration})'.format(dt=time_finish,duration=time_finish-time_start))
 
 
 def call_test_program():
@@ -70,7 +150,7 @@ def main():
             else:
                 raise AttributeError('program to run not recognized: {program}'.format(program=args.program))
         else:
-            print('program to run not specified')
+            print('program to run not specified',file=sys.stderr)
             raise AttributeError('program to run not specified')
     except Exception as e:
         # the program is designed to be user-friendly
