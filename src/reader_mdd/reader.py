@@ -10,6 +10,12 @@ class Reader:
             raise FileNotFoundError('File not found: {f}'.format(f=self.fname))
         raise NotImplementedError('Reading MDD is not implemented yet')
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
     def count_records(self):
         return None
 

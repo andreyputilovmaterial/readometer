@@ -1,5 +1,6 @@
 
 from pathlib import Path
+import pyreadstat
 
 
 class Reader:
@@ -8,9 +9,17 @@ class Reader:
         self.fname = Path(fname).resolve()
         if not self.fname.is_file():
             raise FileNotFoundError('File not found: {f}'.format(f=self.fname))
-        raise NotImplementedError('Reading SPSS is not implemented yet')
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
     def count_records(self):
-        return None
+        count = 0
+        for df, _ in pyreadstat.read_file_in_chunks(pyreadstat.read_sav,self.fname,chunksize=10000):
+            count += len(df)
+        return count
 
 

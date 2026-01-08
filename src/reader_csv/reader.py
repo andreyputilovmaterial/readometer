@@ -10,6 +10,12 @@ class Reader:
             raise FileNotFoundError('File not found: {f}'.format(f=self.fname))
         raise NotImplementedError('Reading CSV is not implemented yet')
 
+    def __enter__(self):
+        return self
+
+    def __exit__(selself, exc_type, exc_val, exc_tbf):
+        pass
+
     def count_records(self):
         return None
 
