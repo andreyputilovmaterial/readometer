@@ -1,11 +1,20 @@
 
 from pathlib import Path
-import pyreadstat
+
+
+pyreadstat = None
+err_import = None
+try:
+    import pyreadstat
+except ImportError as err:
+    err_import = err
 
 
 class Reader:
 
     def __init__(self,fname):
+        if err_import:
+            raise err_import
         self.fname = Path(fname).resolve()
         if not self.fname.is_file():
             raise FileNotFoundError('File not found: {f}'.format(f=self.fname))
