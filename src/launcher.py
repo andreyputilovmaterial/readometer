@@ -86,7 +86,7 @@ def call_read_records_count_program():
         if Path(inp_file).suffix.strip().lower() in ['.sav']:
             format = 'spss'
         elif Path(inp_file).suffix.strip().lower() in ['.mdd','.ddf']:
-            format = 'spss'
+            format = 'mdd'
         elif Path(inp_file).suffix.strip().lower() in ['.csv','.tsv']:
             format = 'csv'
         else:
